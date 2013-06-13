@@ -54,11 +54,20 @@ class CF_Batcache_Manager {
 	}
 
 	public function flush_all() {
-		global $wp_object_cache;
-		$ret = true;
-		foreach ( array_keys($wp_object_cache->mc) as $group )
-			$ret &= $wp_object_cache->mc[$group]->flush();
-		return $ret;
+		if (!wp_cache_flush()) {
+			global $wp_object_cache;
+			if ($wp_object_cache instanceof APC_Object_Cache) {
+				$this->cache = array();
+				return apc_clear_cache( 'user' );
+			}
+			else { // Assume memcache backend
+				$ret = true;
+				foreach (array_keys($wp_object_cache->mc) as $group) {
+					$ret &= $wp_object_cache->mc[$group]->flush();
+				}
+				return $ret;
+		    }
+		}
 	}
 
 	public function clear_home() {
