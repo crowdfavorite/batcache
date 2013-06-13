@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin name: Batcache Manager (CF Modified)
-Plugin URI: http://wordpress.org/extend/plugins/batcache/
+Plugin URI: https://github.com/crowdfavorite/batcache
 Description: This optional plugin improves Batcache.
 Author: Andy Skelton (CF Modified)
 Author URI: http://andyskelton.com/
