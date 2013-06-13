@@ -34,8 +34,12 @@ class CF_Batcache_Manager {
 	public function wp_loaded() {
 		if (is_super_admin() && is_admin()) {
 			if (isset($_GET['flush_cache']) && $_GET['flush_cache'] == 'true') {
-				$this->flush_all();
-				add_action('admin_notices', create_function('', 'echo "<div class=\"updated\"><p>Cache flushed</p></div>";'));
+				if($this->flush_all()) {
+					add_action('admin_notices', create_function('', 'echo "<div class=\"updated\"><p>Cache flushed</p></div>";'));
+				}
+				else {
+					add_action('admin_notices', create_function('', 'echo "<div class=\"error\"><p>There was a problem in trying to flush the cache.</p></div>";'));
+				}
 			}
 		}
 	}
@@ -66,8 +70,9 @@ class CF_Batcache_Manager {
 					$ret &= $wp_object_cache->mc[$group]->flush();
 				}
 				return $ret;
-		    }
+			}
 		}
+		return true;
 	}
 
 	public function clear_home() {
