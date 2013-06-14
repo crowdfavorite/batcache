@@ -43,8 +43,6 @@ class CF_Batcache_Manager {
 			add_action('wp_loaded', array($this, 'wp_loaded'));
 			add_action('admin_bar_menu', array($this, 'admin_bar_menu'), 99);
 			add_action('clean_post_cache', array($this, 'clean_post_cache'));
-			add_action('wp_set_comment_status', 'comment_approved', 10, 2);
-			add_action('comment_post', 'comment_approved', 10, 2);
 		}
 	}
 
@@ -102,23 +100,6 @@ class CF_Batcache_Manager {
 	public function clean_post_cache($post_id) {
 		$this->clear_post($post_id);
 		$this->clear_home();
-	}
-
-	/**
-	 * Triggers a post cache clearing whenever a comment is Approved
-	 *
-	 * @param int $comment_id  ID of comment
-	 * @param mixed $status  indication of whether the post was approved
-	 * @access public
-	 * @return void
-	 */
-	public function comment_approved($comment_id, $status) {
-		if ($status) {
-			if ($status === 1 || $status == 'approve') {
-				$comment = get_comment($comment_id);
-				$this->clear_post($comment->comment_post_ID);
-			}
-		}
 	}
 
 	/* Utility Functions */
