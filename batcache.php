@@ -8,10 +8,19 @@ Author URI: http://andyskelton.com/
 Version: 0.1
  */
 
+/**
+ * CF_Batcache_Manager
+ */
 class CF_Batcache_Manager {
 
 	private $_batcache;
 
+	/**
+	 * Constructor
+	 *
+	 * @param $bc Batcache global instance
+	 * @access public
+	 */
 	public function __construct($bc) {
 		global $wp_object_cache;
 		// Do not load if our advanced-cache.php isn't loaded
@@ -23,6 +32,12 @@ class CF_Batcache_Manager {
 		$this->_batcache->configure_groups();
 	}
 
+	/**
+	 * Adds WordPress Actions/Filters if batcache is enabled
+	 *
+	 * @access public
+	 * @return void
+	 */
 	public function add_hooks() {
 		if ($this->_batcache) {
 			add_action('wp_loaded', array($this, 'wp_loaded'));
@@ -35,6 +50,15 @@ class CF_Batcache_Manager {
 
 	/* Hooks */
 
+	/**
+	 * Triggers a global cache flush if 'flush_cache' GET param is set to 'true'
+	 *
+	 * Also checks for super admin privilege and on an admin screen
+	 *
+	 * @wp-action wp_loaded
+	 * @access public
+	 * @return void
+	 */
 	public function wp_loaded() {
 		if (is_super_admin() && is_admin()) {
 			if (isset($_GET['flush_cache']) && $_GET['flush_cache'] == 'true') {
@@ -48,6 +72,13 @@ class CF_Batcache_Manager {
 		}
 	}
 
+	/**
+	 * Adds the "Flush Page Cache" button to the admin bar
+	 *
+	 * @wp-action admin_bar_menu
+	 * @access public
+	 * @return void
+	 */
 	public function admin_bar_menu() {
 		global $wp_admin_bar;
 		if ($this->_batcache && is_super_admin() && is_admin()) {
@@ -61,11 +92,26 @@ class CF_Batcache_Manager {
 		}
 	}
 
+	/**
+	 * Clears individual post cache and home page cache when post is added/updated
+	 *
+	 * @param int $post_id  ID of post being saved
+	 * @access public
+	 * @return void
+	 */
 	public function clean_post_cache($post_id) {
 		$this->clear_post($post_id);
 		$this->clear_home();
 	}
 
+	/**
+	 * Triggers a post cache clearing whenever a comment is Approved
+	 *
+	 * @param int $comment_id  ID of comment
+	 * @param mixed $status  indication of whether the post was approved
+	 * @access public
+	 * @return void
+	 */
 	public function comment_approved($comment_id, $status) {
 		if ($status) {
 			if ($status === 1 || $status == 'approve') {
@@ -77,6 +123,12 @@ class CF_Batcache_Manager {
 
 	/* Utility Functions */
 
+	/**
+	 * Attempt to flush all caches
+	 *
+	 * @access public
+	 * @return bool
+	 */
 	public function flush_all() {
 		if (!wp_cache_flush()) {
 			global $wp_object_cache;
@@ -95,11 +147,24 @@ class CF_Batcache_Manager {
 		return true;
 	}
 
+	/**
+	 * Clear the home page cache
+	 *
+	 * @access public
+	 * @return void
+	 */
 	public function clear_home() {
 		$this->clear_url(get_option('home'));
 		$this->clear_url(trailingslashit(get_option('home')));
 	}
 
+	/**
+	 * Clear cache for a specified post_id
+	 *
+	 * @param int $post_id  The post_id to clear
+	 * @access public
+	 * @return void
+	 */
 	public function clear_post($post_id) {
 		$post = get_post($post_id);
 		if ($post->post_type != 'revision' || get_post_status($post_id) == 'publish') {
@@ -107,6 +172,13 @@ class CF_Batcache_Manager {
 		}
 	}
 
+	/**
+	 * Clear cache for a specified url
+	 *
+	 * @param string $url  url to clear
+	 * @access public
+	 * @return void
+	 */
 	public function clear_url($url) {
 		if (!$url) {
 			return false;
