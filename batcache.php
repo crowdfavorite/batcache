@@ -6,7 +6,7 @@ Description: This optional plugin improves Batcache.
 Author: Andy Skelton (CF Modified)
 Author URI: http://andyskelton.com/
 Version: 0.1
-*/
+ */
 
 class CF_Batcache_Manager {
 
@@ -15,7 +15,7 @@ class CF_Batcache_Manager {
 	public function __construct($bc) {
 		global $wp_object_cache;
 		// Do not load if our advanced-cache.php isn't loaded
-		if ( ! is_object($bc) || ! method_exists( $wp_object_cache, 'incr' ) ) {
+		if (! is_object($bc) || ! method_exists($wp_object_cache, 'incr')) {
 			return;
 		}
 
@@ -26,10 +26,14 @@ class CF_Batcache_Manager {
 	public function add_hooks() {
 		if ($this->_batcache) {
 			add_action('wp_loaded', array($this, 'wp_loaded'));
-			add_action('admin_bar_menu', array($this, 'admin_bar'), 99);
-			add_action('clean_post_cache', array($this, 'clear_post'));
+			add_action('admin_bar_menu', array($this, 'admin_bar_menu'), 99);
+			add_action('clean_post_cache', array($this, 'clean_post_cache'));
+			add_action('wp_set_comment_status', 'comment_approved', 10, 2);
+			add_action('comment_post', 'comment_approved', 10, 2);
 		}
 	}
+
+	/* Hooks */
 
 	public function wp_loaded() {
 		if (is_super_admin() && is_admin()) {
@@ -44,7 +48,7 @@ class CF_Batcache_Manager {
 		}
 	}
 
-	public function admin_bar() {
+	public function admin_bar_menu() {
 		global $wp_admin_bar;
 		if ($this->_batcache && is_super_admin() && is_admin()) {
 			$query_string = (is_array($wp->query_string)) ? $wp->query_string : array();
@@ -57,12 +61,28 @@ class CF_Batcache_Manager {
 		}
 	}
 
+	public function clean_post_cache($post_id) {
+		$this->clear_post($post_id);
+		$this->clear_home();
+	}
+
+	public function comment_approved($comment_id, $status) {
+		if ($status) {
+			if ($status === 1 || $status == 'approve') {
+				$comment = get_comment($comment_id);
+				$this->clear_post($comment->comment_post_ID);
+			}
+		}
+	}
+
+	/* Utility Functions */
+
 	public function flush_all() {
 		if (!wp_cache_flush()) {
 			global $wp_object_cache;
 			if ($wp_object_cache instanceof APC_Object_Cache) {
 				$this->cache = array();
-				return apc_clear_cache( 'user' );
+				return apc_clear_cache('user');
 			}
 			else { // Assume memcache backend
 				$ret = true;
@@ -76,19 +96,18 @@ class CF_Batcache_Manager {
 	}
 
 	public function clear_home() {
-		$this->clear_url( get_option('home') );
-		$this->clear_url( trailingslashit( get_option('home') ) );
+		$this->clear_url(get_option('home'));
+		$this->clear_url(trailingslashit(get_option('home')));
 	}
 
 	public function clear_post($post_id) {
 		$post = get_post($post_id);
 		if ($post->post_type != 'revision' || get_post_status($post_id) == 'publish') {
 			$this->clear_url(get_permalink($post_id));
-			$this->clear_home();
 		}
 	}
 
-	private function clear_url($url) {
+	public function clear_url($url) {
 		if (!$url) {
 			return false;
 		}
