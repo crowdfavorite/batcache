@@ -166,7 +166,7 @@ class CF_Batcache_Manager {
 }
 
 // Do not load if our advanced-cache.php isn't loaded
-if (is_object($bc) && method_exists($wp_object_cache, 'incr')) {
+if ( isset($batcache) && is_object($batcache) && method_exists($wp_object_cache, 'incr')) {
 	$cf_batcache = new CF_Batcache_Manager($batcache);
 	$cf_batcache->add_hooks();
 }
