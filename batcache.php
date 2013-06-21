@@ -23,11 +23,6 @@ class CF_Batcache_Manager {
 	 */
 	public function __construct($bc) {
 		global $wp_object_cache;
-		// Do not load if our advanced-cache.php isn't loaded
-		if (! is_object($bc) || ! method_exists($wp_object_cache, 'incr')) {
-			return;
-		}
-
 		$this->_batcache = $bc;
 		$this->_batcache->configure_groups();
 	}
@@ -170,5 +165,8 @@ class CF_Batcache_Manager {
 	}
 }
 
-$cf_batcache = new CF_Batcache_Manager($batcache);
-$cf_batcache->add_hooks();
+// Do not load if our advanced-cache.php isn't loaded
+if (is_object($bc) && method_exists($wp_object_cache, 'incr')) {
+	$cf_batcache = new CF_Batcache_Manager($batcache);
+	$cf_batcache->add_hooks();
+}
